@@ -2,41 +2,46 @@
 
 import React, { FormEvent, useState } from "react";
 import CustomFileSelector from "./CustomFileSelector";
-import ImagePreview from "./ImagePreview";
+import SelectedFilesPreview from "./SelectedFilesPreview";
 import axios from "axios";
 import classNames from "classnames";
 
 const FileUploadForm = () => {
-  const [images, setImages] = useState<File[]>([]);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
 
   const handleFileSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const selectedFiles = Array.from(e.target.files);
       const newFiles = selectedFiles.filter(
-        (file) => !images.some((existingFile) => existingFile.name === file.name)
+        (file) => !selectedFiles.some((existingFile) => existingFile.name === file.name)
       );
-      setImages((prevImages) => [...prevImages, ...newFiles]);
+      setSelectedFiles((prevImages) => [...prevImages, ...newFiles]);
     }
   };
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+  const handleRemoveFile = (fileName: string) => {
+    setSelectedFiles((prevImages) => prevImages.filter((file) => file.name !== fileName));
+  };
+
+  const handleFilesSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    console.log("Clicked")
     const formData = new FormData();
-    console.log(formData)
-    images.forEach((image) => {
+    selectedFiles.forEach((image) => {
       formData.append(image.name, image);
     });
+    console.log(formData, "form data")
     setUploading(true);
     // await axios.post("/api/upload", formData);
     // setUploading(false);
   };
 
   return (
-    <form className="w-full" onSubmit={handleSubmit}>
+    <form className="w-full" onSubmit={handleFilesSubmit}>
       <div className="flex justify-between">
         <CustomFileSelector
-           accept="application/msword, application/vnd.ms-excel, application/vnd.ms-powerpoint, text/plain, application/pdf, image/*"
+          accept="application/msword, application/vnd.ms-excel, application/vnd.ms-powerpoint, text/plain, application/pdf, image/*"
           onChange={handleFileSelected}
         />
         <button
@@ -50,7 +55,7 @@ const FileUploadForm = () => {
           Upload
         </button>
       </div>
-      <ImagePreview images={images} />
+      <SelectedFilesPreview files={selectedFiles} onRemoveFile={handleRemoveFile} />
     </form>
   );
 };
